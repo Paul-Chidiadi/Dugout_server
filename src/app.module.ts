@@ -6,10 +6,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { dataSourceOptions } from './common/config/db/typeORM.config';
 import { join } from 'path';
 import { UserModule } from './modules/user/user.module';
+import { AuthModule } from './modules/auth/auth.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(dataSourceOptions),
     UserModule,
+    AuthModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', 'public'), // Serve the public folder
       serveRoot: '/api/v1/public',

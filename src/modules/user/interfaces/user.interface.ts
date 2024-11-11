@@ -1,4 +1,3 @@
-import { USER_ROLE } from 'src/common/enums/user.enum';
 import { User } from '../entities/user.entity';
 
 export interface ILoginResponse {
@@ -21,7 +20,6 @@ export interface IUser {
   id?: string;
   name?: string;
   email?: string;
-  idToken?: string;
   createdAt?: any;
   updatedAt?: any;
 }
