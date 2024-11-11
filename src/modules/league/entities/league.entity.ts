@@ -7,6 +7,8 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   OneToMany,
+  JoinColumn,
+  OneToOne,
 } from 'typeorm';
 
 @Entity('league_group')
@@ -41,6 +43,10 @@ export class League_Group {
     cascade: true,
   })
   users: User[];
+
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  createdBy: User;
 
   @CreateDateColumn()
   createdAt: Date;
