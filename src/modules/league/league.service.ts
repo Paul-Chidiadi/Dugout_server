@@ -73,6 +73,14 @@ export class LeagueService {
         HttpStatus.BAD_REQUEST,
       );
     }
+    // Check if league is already filled up
+    const numberOfAlreadyJoinedUsers = existingLeague.users.length;
+    if (numberOfAlreadyJoinedUsers === 8) {
+      throw new HttpException(
+        'League is full, join another group',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     // Check if the user is already part of the league
     const isUserAlreadyInLeague = existingLeague.users.some(
       (existingUser) => existingUser.id === user.id,
