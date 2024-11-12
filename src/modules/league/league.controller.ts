@@ -3,6 +3,8 @@ import {
   Controller,
   HttpException,
   HttpStatus,
+  Param,
+  Patch,
   Post,
   Res,
   UseGuards,
@@ -35,6 +37,26 @@ export class LeagueController {
     }
     throw new HttpException(
       'Unable to Create leagueGroup. Please try again later!',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch('/:leagueId')
+  async joinLeague(
+    @Param('leagueId') leagueId: string,
+    @CurrentUser() currentUser: ICurrentUser,
+    @Res() response: Response,
+  ) {
+    const leagueGroup = await this.leagueService.joinLeague(
+      leagueId,
+      currentUser,
+    );
+    if (leagueGroup) {
+      return CreateSuccessResponse(response, leagueGroup, 'Successfull');
+    }
+    throw new HttpException(
+      'Unable to Join leagueGroup. Please try again later!',
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }
