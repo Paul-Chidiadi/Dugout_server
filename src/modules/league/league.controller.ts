@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Param,
@@ -11,7 +12,10 @@ import {
 } from '@nestjs/common';
 import { LeagueService } from './league.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
-import { CreateSuccessResponse } from 'src/common/utils/response.utils';
+import {
+  CreateSuccessResponse,
+  SuccessResponse,
+} from 'src/common/utils/response.utils';
 import { Response } from 'express';
 import { CreateLeagueDto } from './dto/create_league.dto';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
@@ -20,6 +24,32 @@ import { ICurrentUser } from '../user/interfaces/user.interface';
 @Controller('league')
 export class LeagueController {
   constructor(private readonly leagueService: LeagueService) {}
+
+  @Get('')
+  async getAllLeagues(@Res() res: Response) {
+    const leagues = await this.leagueService.getAllLeagues();
+
+    if (leagues) {
+      return SuccessResponse(res, leagues, 'Leagues Fetched Successfully');
+    }
+    throw new HttpException(
+      'No Leagues Found. Please try again later!',
+      HttpStatus.NOT_FOUND,
+    );
+  }
+
+  @Get(':id')
+  async getLeague(@Param('id') id: string, @Res() res: Response) {
+    const league = await this.leagueService.getLeague(id);
+
+    if (league) {
+      return SuccessResponse(res, league, 'League Fetched Successfully');
+    }
+    throw new HttpException(
+      'No League Found. Please try again later!',
+      HttpStatus.NOT_FOUND,
+    );
+  }
 
   @UseGuards(AuthGuard)
   @Post('')

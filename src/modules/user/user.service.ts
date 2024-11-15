@@ -15,6 +15,11 @@ export class UserService {
     return savedResult;
   }
 
+  async findAll(): Promise<Partial<User[]> | null> {
+    const user = await this.userRepository.find();
+    return user;
+  }
+
   async findById(userId: string): Promise<Partial<User> | null> {
     const user = await this.userRepository.findOne({ where: { id: userId } });
     return user;

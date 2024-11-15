@@ -17,6 +17,18 @@ export class LeagueService {
     private readonly utils: Utilities,
   ) {}
 
+  async getAllLeagues(): Promise<League_Group[]> {
+    const leagues = await this.leagueRepository.find();
+    return leagues;
+  }
+
+  async getLeague(id: string): Promise<League_Group> {
+    const league = await this.leagueRepository.findOne({
+      where: { id: id },
+    });
+    return league;
+  }
+
   async createLeague(
     body: Partial<League_Group>,
     currentUser: ICurrentUser,
