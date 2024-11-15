@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { envConfig } from 'src/common/config/env.config';
 import { ILoginResponse, IUser } from '../user/interfaces/user.interface';
 import { UserService } from '../user/user.service';
+import { OAuth2Client } from 'google-auth-library';
 
 @Injectable()
 export class AuthService {
@@ -24,40 +25,50 @@ export class AuthService {
   }
 
   async googleAuth(body: IUser): Promise<Partial<ILoginResponse>> {
-    const { email, name } = body;
+    const { idToken } = body;
+    const client = new OAuth2Client(envConfig.GOOGLE_CLIENT_ID);
+
+    const credentials = {
+      idToken: idToken,
+      audience: envConfig.GOOGLE_CLIENT_ID,
+    };
 
     return (async () => {
       let newUser: any;
-      const userExist = await this.usersService.findByEmail(email);
-      const user: IUser = {
-        name,
-        email,
-      };
-
-      if (!userExist) {
-        newUser = await this.usersService.create(user);
-        const payload = {
-          sub: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
+      const ticket = await client.verifyIdToken(credentials);
+      const payload = ticket.getPayload();
+      if (payload) {
+        const user: any = {
+          name: `${payload.given_name} ${payload.family_name}`,
+          email: payload.email,
+          googleId: payload.sub,
         };
-        // Generate a JWT and return it here
-        const accessToken = await this.createAccessToken(payload);
-        const refreshToken = await this.createRefreshToken(payload);
+        const userExist = await this.usersService.findByEmail(user.email);
+        if (!userExist) {
+          newUser = await this.usersService.create(user);
+          const userPayload = {
+            sub: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+          };
+          // Generate a JWT and return it here
+          const accessToken = await this.createAccessToken(userPayload);
+          const refreshToken = await this.createRefreshToken(userPayload);
 
-        return { accessToken, refreshToken, user: newUser };
-      } else if (userExist) {
-        newUser = await this.usersService.findByEmail(userExist.email);
-        const payload = {
-          sub: newUser.id,
-          email: newUser.email,
-          name: newUser.name,
-        };
-        // Generate a JWT and return it here
-        const accessToken = await this.createAccessToken(payload);
-        const refreshToken = await this.createRefreshToken(payload);
+          return { accessToken, refreshToken, user: newUser };
+        } else if (userExist) {
+          newUser = await this.usersService.findByEmail(userExist.email);
+          const userPayload = {
+            sub: newUser.id,
+            email: newUser.email,
+            name: newUser.name,
+          };
+          // Generate a JWT and return it here
+          const accessToken = await this.createAccessToken(userPayload);
+          const refreshToken = await this.createRefreshToken(userPayload);
 
-        return { accessToken, refreshToken, user: newUser };
+          return { accessToken, refreshToken, user: newUser };
+        }
       }
     })();
   }

@@ -20,6 +20,7 @@ export interface IUser {
   id?: string;
   name?: string;
   email?: string;
+  idToken?: string;
   createdAt?: any;
   updatedAt?: any;
 }

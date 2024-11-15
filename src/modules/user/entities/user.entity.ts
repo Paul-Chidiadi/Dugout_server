@@ -20,6 +20,9 @@ export class User {
   @Column({ length: 50 })
   email: string;
 
+  @Column({ type: 'text', nullable: true })
+  googleId: string;
+
   @Column({ default: false })
   onboarded: boolean;
 

@@ -27,6 +27,7 @@ export const envConfig = {
     Number(process.env.JWT_COOKIE_EXPIRES_IN) * 24 * 60 * 60 * 1000,
   LOCAL_URL: process.env.LOCAL_URL,
   CLIENT_URL: process.env.CLIENT_URL,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
 };
 
 export const emailConfig = {
