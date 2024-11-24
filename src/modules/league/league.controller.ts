@@ -74,12 +74,14 @@ export class LeagueController {
   @UseGuards(AuthGuard)
   @Patch('/:leagueId')
   async joinLeague(
+    @Body() body: { accessKey: string },
     @Param('leagueId') leagueId: string,
     @CurrentUser() currentUser: ICurrentUser,
     @Res() response: Response,
   ) {
     const leagueGroup = await this.leagueService.joinLeague(
       leagueId,
+      body,
       currentUser,
     );
     if (leagueGroup) {

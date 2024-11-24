@@ -6,10 +6,12 @@ import { JwtModule } from '@nestjs/jwt';
 import { envConfig } from '../../common/config/env.config';
 import { UserService } from '../user/user.service';
 import { User } from '../user/entities/user.entity';
+import { PlayersModule } from '../players/players.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
+    PlayersModule,
     JwtModule.register({
       global: true,
       secret: envConfig.JWT_SECRET,

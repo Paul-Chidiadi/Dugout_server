@@ -67,8 +67,10 @@ export class LeagueService {
 
   async joinLeague(
     leagueId: string,
+    body: { accessKey: string },
     currentUser: ICurrentUser,
   ): Promise<League_Group> {
+    const { accessKey } = body;
     const user: User = (await this.usersService.findById(
       currentUser.sub,
     )) as unknown as User;
@@ -86,13 +88,14 @@ export class LeagueService {
       );
     }
     // Check if league is already filled up
-    const numberOfAlreadyJoinedUsers = existingLeague.users.length;
-    if (numberOfAlreadyJoinedUsers === 8) {
+    const maxUsers = 8;
+    if (existingLeague.users.length >= maxUsers) {
       throw new HttpException(
         'League is full, join another group',
         HttpStatus.BAD_REQUEST,
       );
     }
+
     // Check if the user is already part of the league
     const isUserAlreadyInLeague = existingLeague.users.some(
       (existingUser) => existingUser.id === user.id,
@@ -103,6 +106,17 @@ export class LeagueService {
         HttpStatus.BAD_REQUEST,
       );
     }
+
+    if (
+      existingLeague.visibility === LEAGUE_VISIBILITY.PRIVATE &&
+      accessKey !== existingLeague.accessKey
+    ) {
+      throw new HttpException(
+        'Invalid access key for private league',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
     // Add the new user to the league's users array
     existingLeague.users.push(user);
     // Update the league in the database

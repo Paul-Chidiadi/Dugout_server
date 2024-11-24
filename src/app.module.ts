@@ -7,9 +7,11 @@ import { dataSourceOptions } from './common/config/db/typeORM.config';
 import { join } from 'path';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
+import { PlayersModule } from './modules/players/players.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(dataSourceOptions),
+    PlayersModule,
     UserModule,
     AuthModule,
     ServeStaticModule.forRoot({

@@ -1,4 +1,5 @@
 import { League_Group } from 'src/modules/league/entities/league.entity';
+import { Player } from 'src/modules/players/entities/players.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
@@ -7,6 +8,8 @@ import {
   UpdateDateColumn,
   ManyToOne,
   JoinColumn,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 
 @Entity('users')
@@ -48,13 +51,17 @@ export class User {
   clubPlayers: any;
 
   @Column({ type: 'decimal', scale: 2, default: 0 })
-  points: number;
+  score: number;
 
   @ManyToOne(() => League_Group, (league_group) => league_group.users, {
     onDelete: 'CASCADE',
   })
   @JoinColumn()
   leagueGroup: League_Group;
+
+  @ManyToMany(() => Player)
+  @JoinTable()
+  draftedPlayers: Player[];
 
   @CreateDateColumn()
   createdAt: Date;

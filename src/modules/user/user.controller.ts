@@ -19,6 +19,7 @@ import { OnboardUserDto } from './dto/onboard-user.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { ICurrentUser } from './interfaces/user.interface';
+import { DraftPlayersDto } from './dto/draft_players.dto';
 
 @Controller('user')
 export class UserController {
@@ -63,6 +64,23 @@ export class UserController {
     }
     throw new HttpException(
       'Unable to Onboard User. Please try again later!',
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('draft')
+  async draftPlayers(
+    @Body() body: DraftPlayersDto,
+    @CurrentUser() currentUser: ICurrentUser,
+    @Res() response: Response,
+  ) {
+    const user = await this.userService.draftPlayers(body, currentUser);
+    if (user) {
+      return CreateSuccessResponse(response, user, 'Drafting Successfull');
+    }
+    throw new HttpException(
+      'Unable to Draft Players. Please try again later!',
       HttpStatus.INTERNAL_SERVER_ERROR,
     );
   }

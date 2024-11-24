@@ -2,6 +2,7 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 import { dbConfig } from '../env.config';
 import { User } from 'src/modules/user/entities/user.entity';
 import { League_Group } from 'src/modules/league/entities/league.entity';
+import { Player } from 'src/modules/players/entities/players.entity';
 
 export const dataSourceOptions: DataSourceOptions = {
   // TypeORM PostgreSQL DB Drivers
@@ -11,7 +12,7 @@ export const dataSourceOptions: DataSourceOptions = {
   username: dbConfig.DB_USERNAME,
   password: dbConfig.DB_PASSWORD,
   database: dbConfig.DB_DATABASE,
-  entities: [User, League_Group],
+  entities: [User, League_Group, Player],
   synchronize: true,
   ssl: dbConfig.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
 };
