@@ -29,6 +29,9 @@ export class User {
   @Column({ default: false })
   onboarded: boolean;
 
+  @Column({ default: false })
+  isPermittedToCreateGroup: boolean;
+
   @Column({ length: 50, nullable: true })
   username: string;
 

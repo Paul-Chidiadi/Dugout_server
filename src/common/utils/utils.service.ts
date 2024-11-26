@@ -1,97 +1,115 @@
 import * as bcrypt from 'bcrypt';
 import { v4 as uuidv4 } from 'uuid';
 import { envConfig } from '../config/env.config';
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { UnprocessableEntityException } from '@nestjs/common';
 import { convert } from 'html-to-text';
-import { JwtService } from '@nestjs/jwt';
 import { diskStorage } from 'multer';
 import { VALID_FILE_FORMAT } from '../constants';
+import { Request } from 'express';
 
-@Injectable()
-export class Utilities {
-  private pepper = envConfig.BCRYPT_PASSWORD;
-  private saltRound = envConfig.SALT_ROUNDS;
-  private jwtService: JwtService;
+const pepper = envConfig.BCRYPT_PASSWORD;
+const saltRound = envConfig.SALT_ROUNDS;
 
-  public async generateHash(plainPassword: string): Promise<string> {
-    const hash = await bcrypt.hash(plainPassword + this.pepper, this.saltRound);
-    return hash;
+export const generateHash = async (plainPassword: string): Promise<string> => {
+  const hash = await bcrypt.hash(plainPassword + pepper, saltRound);
+  return hash;
+};
+
+export const generateRandomCode = (size = 8, alpha = true): number | string => {
+  const characters = alpha
+    ? '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-'
+    : '0123456789';
+  const chars = characters.split('');
+  let selections = '';
+  for (let i = 0; i < size; i++) {
+    const index = Math.floor(Math.random() * chars.length);
+    selections += chars[index];
+    chars.splice(index, 1);
   }
+  return selections;
+};
 
-  generateRandomCode = (size = 8, alpha = true): number | string => {
-    let characters = alpha
-      ? '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ-'
-      : '0123456789';
-    let chars = characters.split('');
-    let selections = '';
-    for (let i = 0; i < size; i++) {
-      let index = Math.floor(Math.random() * chars.length);
-      selections += chars[index];
-      chars.splice(index, 1);
-    }
-    return selections;
+export const generateOtpCode = () => {
+  const OTP = generateRandomCode(6, false);
+  return {
+    OTP,
+    otpExpiresAt: (Date.now() + 10 * 60 * 1000) as number,
   };
+};
 
-  async createAccessToken(payload: any): Promise<string> {
-    return this.jwtService.signAsync(payload, {
-      expiresIn: Number(envConfig.ACCESSTOKEN_EXPIRES_IN),
-    });
-  }
+export const comparePassword = async (
+  password: string,
+  hashPassword: string,
+): Promise<boolean> => {
+  return await bcrypt.compare(password + pepper, hashPassword);
+};
 
-  async createRefreshToken(payload: any): Promise<string> {
-    return this.jwtService.signAsync(payload, {
-      expiresIn: envConfig.REFRESHTOKEN_EXPIRES_IN,
-    });
-  }
+export const generateUUID = (): string => {
+  const uuid = uuidv4();
+  return uuid;
+};
 
-  async generateOtpCode() {
-    const OTP = this.generateRandomCode(6, false);
-    return {
-      OTP,
-      otpExpiresAt: (Date.now() + 10 * 60 * 1000) as number,
-    };
-  }
+export const convertEmailToText = (html: string) => {
+  const result = convert(html, {
+    wordwrap: 130,
+  });
+  return result;
+};
 
-  async comparePassword(
-    password: string,
-    hashPassword: string,
-  ): Promise<boolean> {
-    return await bcrypt.compare(password + this.pepper, hashPassword);
-  }
-
-  public generateUUID(): string {
-    const uuid = uuidv4();
-    return uuid;
-  }
-
-  async convertEmailToText(html: string) {
-    const result = convert(html, {
-      wordwrap: 130,
-    });
-    return result;
-  }
-
-  Date() {
-    let currentdate = new Date();
-    let datetime =
-      'Last Sync: ' +
-      currentdate.getDate() +
-      '/' +
-      (currentdate.getMonth() + 1) +
-      '/' +
-      currentdate.getFullYear() +
-      ' @ ' +
-      currentdate.getHours() +
-      ':' +
-      currentdate.getMinutes() +
-      ':' +
-      currentdate.getSeconds();
-    return datetime;
-  }
+export function getFormattedDate() {
+  const currentdate = new Date();
+  const datetime =
+    'Last Sync: ' +
+    currentdate.getDate() +
+    '/' +
+    (currentdate.getMonth() + 1) +
+    '/' +
+    currentdate.getFullYear() +
+    ' @ ' +
+    currentdate.getHours() +
+    ':' +
+    currentdate.getMinutes() +
+    ':' +
+    currentdate.getSeconds();
+  return datetime;
 }
 
-export function processFile(req: any, file: any) {
-  const filePath = `https://${req.get('host')}/api/v1/public/files/${file.filename}`;
+export function monthlyInterval(durationMonths: number): string {
+  let duration: string = '';
+  switch (durationMonths) {
+    case 1:
+      duration = 'monthly';
+      break;
+    case 3:
+      duration = 'quarterly';
+      break;
+    case 6:
+      duration = 'biannually';
+    case 12:
+      duration = 'annually';
+      break;
+    default:
+      duration = 'Unknown Duration';
+      break;
+  }
+  return duration;
+}
+
+export interface UploadedFile {
+  fieldname: string;
+  originalname: string;
+  encoding: string;
+  mimetype: string;
+  destination: string;
+  filename: string;
+  path: string;
+  size: number;
+}
+
+export function processFilePath(req: Request, file: UploadedFile) {
+  const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+  const host = req.get('host');
+  const filePath = `${protocol}://${host}/api/v1/${file.path}`;
   return filePath;
 }
 
@@ -119,3 +137,32 @@ export const getDateString = () => {
 
   return `${year}-${month}-${day}`;
 };
+
+export function getTrialEndDate(trialDays: number) {
+  // Get the current date
+  const currentDate = new Date();
+
+  // Calculate the end date after adding the number of trial days
+  const endDate = new Date(
+    currentDate.getTime() + trialDays * 24 * 60 * 60 * 1000,
+  );
+
+  // Set the time of the new date to midnight (12:00 AM)
+  endDate.setHours(0);
+  endDate.setMinutes(0);
+  endDate.setSeconds(0);
+  endDate.setMilliseconds(0);
+
+  // Return the new date
+  return endDate;
+}
+
+export function getCurrentTimeAt12AM() {
+  // Get the current date
+  const now = new Date();
+
+  // Set the time to 12:00 AM
+  now.setHours(0, 0, 0, 0);
+
+  return now;
+}

@@ -8,6 +8,10 @@ import { join } from 'path';
 import { UserModule } from './modules/user/user.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { PlayersModule } from './modules/players/players.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { TasksModule } from './modules/tasks/tasks.module';
+import { NotificationsModule } from './modules/notifications/notifications.module';
+
 @Module({
   imports: [
     TypeOrmModule.forRoot(dataSourceOptions),
@@ -18,6 +22,9 @@ import { PlayersModule } from './modules/players/players.module';
       rootPath: join(__dirname, '..', '..', 'public'), // Serve the public folder
       serveRoot: '/api/v1/public',
     }),
+    ScheduleModule.forRoot(),
+    TasksModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -1,12 +1,12 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { League_Group } from './entities/league.entity';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 import { ICurrentUser } from '../user/interfaces/user.interface';
 import { UserService } from '../user/user.service';
-import { LEAGUE_VISIBILITY } from 'src/common/enums/league.enum';
-import { Utilities } from 'src/common/utils/utils.service';
+import { LEAGUE_STATUS, LEAGUE_VISIBILITY } from 'src/common/enums/league.enum';
 import { User } from '../user/entities/user.entity';
+import { generateRandomCode } from 'src/common/utils/utils.service';
 
 @Injectable()
 export class LeagueService {
@@ -14,8 +14,18 @@ export class LeagueService {
     @InjectRepository(League_Group)
     private readonly leagueRepository: Repository<League_Group>,
     private readonly usersService: UserService,
-    private readonly utils: Utilities,
   ) {}
+
+  async updateAllLeagueStatus(
+    currentLeagueStatus: LEAGUE_STATUS,
+    leagueUpdateStatus: LEAGUE_STATUS,
+  ): Promise<UpdateResult> {
+    const leagues = await this.leagueRepository.update(
+      { status: currentLeagueStatus },
+      { status: leagueUpdateStatus },
+    );
+    return leagues;
+  }
 
   async getAllLeagues(): Promise<League_Group[]> {
     const leagues = await this.leagueRepository.find();
@@ -40,6 +50,12 @@ export class LeagueService {
     if (!user) {
       throw new HttpException('User does not exist', HttpStatus.BAD_REQUEST);
     }
+    if (!user.isPermittedToCreateGroup) {
+      throw new HttpException(
+        "You can't create Group at this time",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     const leagueNameExists = await this.leagueRepository.findOne({
       where: { name },
     });
@@ -51,7 +67,7 @@ export class LeagueService {
     }
     const accessKey =
       visibility === LEAGUE_VISIBILITY.PRIVATE
-        ? `DUG:${this.utils.generateRandomCode(6, false)}`
+        ? `DUG:${generateRandomCode(6, false)}`
         : null;
     const payload: Partial<League_Group> = {
       name,
@@ -76,6 +92,12 @@ export class LeagueService {
     )) as unknown as User;
     if (!user) {
       throw new HttpException('User does not exist', HttpStatus.BAD_REQUEST);
+    }
+    if (!user.isPermittedToCreateGroup) {
+      throw new HttpException(
+        "You can't create Group at this time",
+        HttpStatus.BAD_REQUEST,
+      );
     }
     const existingLeague = await this.leagueRepository.findOne({
       where: { id: leagueId },

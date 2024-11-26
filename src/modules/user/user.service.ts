@@ -19,6 +19,17 @@ export class UserService {
     private readonly playerRepository: Repository<Player>,
   ) {}
 
+  async updateAllUsersPermission(
+    currentPermissionStatus: boolean,
+    permissionUpdateStatus: boolean,
+  ): Promise<UpdateResult> {
+    const user = await this.userRepository.update(
+      { isPermittedToCreateGroup: currentPermissionStatus },
+      { isPermittedToCreateGroup: permissionUpdateStatus },
+    );
+    return user;
+  }
+
   async create(createUser: Partial<User>): Promise<User> {
     const savedResult = await this.userRepository.save(createUser);
     return savedResult;
@@ -79,6 +90,7 @@ export class UserService {
     }
     const payload: Partial<User> = {
       ...body,
+      onboarded: true,
     };
     const updatedUser = await this.updateUser(payload, user.email);
     return updatedUser;
